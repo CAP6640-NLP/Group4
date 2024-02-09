@@ -1,4 +1,6 @@
 venv
 *.code-workspace
-archive*
 *.cpython*
+*.npy
+*.csv
+*.pkl
