@@ -4,3 +4,4 @@ venv
 *.npy
 *.csv
 *.pkl
+archive*
