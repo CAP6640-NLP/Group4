@@ -6,7 +6,7 @@ from torch import nn
 class MultiHeadAttention(nn.Module): 
     def __init__(self, embed_dim=512, num_heads=8, dropout=0.1):
         '''
-            embed_dim: embedding dimension of the input -> NOTE: From class notes = 512
+            embed_dim: embedding dimension of the input (a.k.a model dimensions)-> NOTE: From class notes = 512
             num_heads: number of heads in the multi-head attention
             dropout: dropout probability
         '''
