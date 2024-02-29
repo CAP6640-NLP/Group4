@@ -67,4 +67,4 @@ class MultiHeadAttention(nn.Module):
         # Apply the output weight matrix to the attention tensor
         output = self.output_weights(attention)
 
-        return output
+        return output, attention_softmax

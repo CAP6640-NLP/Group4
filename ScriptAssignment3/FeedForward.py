@@ -21,7 +21,7 @@ class FeedForward(nn.module):
             nn.ReLU(),
             dropout,
             linear2,
-            dropout
+            dropout # @TODO this is an extra dropout, do we need this?
         )
 
     def forward(self, x):
