@@ -62,7 +62,15 @@ class DecoderLayer(nn.Module):
         return output, scores
 
 class Decoder(nn.Module):
-    def __init__(self, len_vocab, embed_dim=512, layers=32, num_heads=8, feedforward_dim=2048, dropout=0.1):
+    def __init__(
+        self, 
+        len_vocab, 
+        embed_dim=512, 
+        layers=32, 
+        num_heads=8, 
+        feedforward_dim=2048, 
+        dropout=0.1
+    ):
         '''
         Arguments:
         

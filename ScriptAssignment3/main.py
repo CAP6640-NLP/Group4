@@ -1,6 +1,8 @@
 import os
 from inputEmbedding import InputEmbedding, Embeddings
 import pandas as pd
+import Encoder
+import Decoder
 
 current_dir = os.getcwd()
 relative_path = os.path.join(current_dir, 'ScriptAssignment3', 'IMDBDataset.csv')
@@ -32,3 +34,31 @@ embedding = Embeddings(d_model, vocab_size)
 embedded_review = embedding(first_review_tensor)
 
 print(embedded_review)
+
+def create_transfomer_model(
+    input_vocab,
+    output_vocab,
+    layers: int = 3,
+    embed_dim: int = 512,
+    feedforward_dim: int = 2048,
+    num_heads: int = 8,
+    dropout: float = 0.1,
+    max_sequence_length: int = 512
+):
+    encoder = Encoder(
+        embed_dim=embed_dim, 
+        layers=layers, 
+        num_heads=num_heads, 
+        feedforward_dim=feedforward_dim, 
+        dropout=dropout
+    )
+    
+    decoder = Decoder(
+        len_vocab=len(input_vocab),
+        embed_dim=embed_dim, 
+        layers=layers, 
+        num_heads=num_heads, 
+        feedforward_dim=feedforward_dim, 
+        dropout=dropout
+    )
+        
