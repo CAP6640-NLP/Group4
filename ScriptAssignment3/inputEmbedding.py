@@ -20,7 +20,7 @@ class InputEmbedding():
     def __init__(self, dataframe):
         self.df = dataframe
         self.vocab_size = 0
-        self.d_model = 0
+        self.embed_dim = 0
 
     def preprocess_text(text):
         # Make the text all lower case
@@ -40,11 +40,21 @@ class InputEmbedding():
             for token in tokens:
                 if token not in vocab:
                     vocab.append(token)
+        output = ['positive', 'negative']
+        for word in output:
+            if word not in df['review']:
+                tokens = word_tokenize(word)
+                for token in tokens:
+                    if token not in vocab:
+                        vocab.append(token)
+                
         vocab.sort()
+        vocab.append('<padding>')
         # create dicitonary of word to integer
-        stoi = {word: i for i, word in enumerate(vocab)}
-        self.vocab_size = len(stoi)
-        return stoi
+        input_stoi = {word: i for i, word in enumerate(vocab)}
+        output_stoi = {x:input_stoi[x] for x in input_stoi if x in output}
+        self.vocab_size = len(input_stoi)
+        return input_stoi, output_stoi
 
     def convert_to_integer(self, stoi, text):
         # convert the text to a list of integers using the stoi dictionary
@@ -57,11 +67,11 @@ class InputEmbedding():
 
 class Embeddings(nn.Module):
     '''This class is the embendding layer in the model. Takes in the model dimensions and the vocab size to initalize'''
-    def __init__(self, d_model, vocab_size):
+    def __init__(self, embed_dim, vocab_size):
         super().__init__()
-        self.embed = nn.Embedding(vocab_size, d_model)
-        self.d_model = d_model
+        self.embed = nn.Embedding(vocab_size, embed_dim)
+        self.embed_dim = embed_dim
 
     def forward(self, x):
         # this function takes in a tensor and returns the tensor with the embedding layer applied
-        return self.embed(x) * torch.sqrt(torch.tensor(self.d_model, dtype=torch.float32))
+        return self.embed(x) * torch.sqrt(torch.tensor(self.embed_dim, dtype=torch.float32))
