@@ -25,13 +25,17 @@ class InputEmbedding():
     def preprocess_text(sentiment, text, vocab):
         # Make the text all lower case
         tokens = word_tokenize(text.lower())
+        
         # remove punctuation and stopwords
-        tokens = [token.translate(str.maketrans('', '', string.punctuation)) for token in tokens if token not in string.punctuation and token not in stop_words and token not in vocab]
-        # Lemmatize tokens
-        tokens = [lemmatizer.lemmatize(token) for token in tokens]
-        # return cleaned text as a string
-        vocab.extend(tokens)
+        tokens = [token.translate(str.maketrans('', '', string.punctuation)) for token in tokens if token not in string.punctuation and token]
+        
+        # Build vocab of unique words
+        new_vocab = [token for token in tokens if token not in vocab]
+        vocab.extend(new_vocab)
+        
+        # Convert sentiment to text
         labels = {1: 'negative', 2: 'positive'}
+        
         return labels[sentiment], ' '.join(tokens), vocab
                         
     def build_vocab_stoi(self, vocab):                
@@ -44,7 +48,7 @@ class InputEmbedding():
             
         # create dicitonary of word to integer
         input_stoi = {word: i for i, word in enumerate(vocab)}
-        output_stoi = {input_stoi['positive'], input_stoi['negative']}
+        output_stoi = {'positive': input_stoi['positive'], 'negative': input_stoi['negative']}
         self.vocab_size = len(input_stoi)
         return input_stoi, output_stoi
 
@@ -62,14 +66,18 @@ class InputEmbedding():
     def pad(self, batch):
         length = self.max_length
         pad_index = self.pad_index
+        
         # pad the tensor with padding to make it the same length as the longest tensor
         sentiment_batch = []
         text_batch = []
         for (sentiment, text) in batch:
             sentiment_batch.append(sentiment)
             text_batch.append(pad(text, (0, length - len(text)), value=pad_index))
-            
-        return torch.stack(sentiment_batch), torch.stack(text_batch)
+        
+        sent_batch = torch.stack(sentiment_batch)
+        txt_batch = torch.stack(text_batch)
+        print("debug123: inside pad, sent_batch: ", sent_batch, ", txt_batch: ", txt_batch)
+        return sent_batch, txt_batch
     
     def set_max_length(self, length):
         self.max_length = length
@@ -83,8 +91,8 @@ class Embeddings(nn.Module):
         super().__init__()
         self.embed = nn.Embedding(vocab_size, embed_dim)
         self.embed_dim = embed_dim
+        self.vocab_size = vocab_size
 
     def forward(self, x):
-        # this function takes in a tensor and returns the tensor with the embedding layer applied
-        print("debug123 inside embeddings: dim is: ", self.embed_dim, ", x is: ", x, ", len(x) is: ", len(x))
+        # returns input tensor with the embedding layer applied
         return self.embed(x) * torch.sqrt(torch.tensor(self.embed_dim, dtype=torch.float32))

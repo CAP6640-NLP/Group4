@@ -37,13 +37,8 @@ class Model():
             dropout=dropout
         )
 
-        print("debug123: input size: ", len(input_vocab), ", output size: ", len(output_vocab))
         input_embed = Embeddings(embed_dim=embed_dim, vocab_size=len(input_vocab))
-
-        print("debug123: output embed")
         output_embed = Embeddings(embed_dim=embed_dim, vocab_size=len(output_vocab))
-
-        print("debug123: positional encode")
         positional_enc = PositionalEncoding(embed_dim=embed_dim, max_len=max_sequence_length)
 
         model = Transformer(encoder,
@@ -61,12 +56,16 @@ class Model():
     def count_parameters(model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
     
-    def train(model, iterator, optimizer, criterion, clip):
-        # model.train()            
+    def do_train(model, iterator, optimizer, criterion, clip=1):
+        model.train()            
         epoch_loss = 0
+        print("debug123: inside do_train, iterator: ", iterator, ", type: ", type(iterator))
             
-        for i, batch in enumerate(iterator):
-            input, output = batch
+        # for i, batch in enumerate(iterator):
+        for input, output in iterator:
+            # print("batch is: ", batch, ", type is: ", type(batch))
+            # input, output = batch
+            print("debug123: input: ", input, ", output: ", output, ", type: ", type(input), ", ", type(output))
             optimizer.zero_grad()
             logits = model(input, output[:,:-1])
             expected_output = output[:,1:]
@@ -80,10 +79,10 @@ class Model():
             epoch_loss += loss.item()
 
         # average loss for the epoch
-        return epoch_loss / len(iterator)
-        # return epoch_loss
+        # return epoch_loss / len(iterator)
+        return epoch_loss
     
-    def evaluate(model, iterator, criterion):
+    def do_evaluate(model, iterator, criterion):
         model.eval()
         epoch_loss = 0
             
@@ -99,8 +98,8 @@ class Model():
                 epoch_loss += loss.item()
                 
         # average loss for the epoch
-        return epoch_loss / len(iterator)
-        # return epoch_loss
+        # return epoch_loss / len(iterator)
+        return epoch_loss
     
     def epoch_time(start_time, end_time):
         elapsed_time = end_time - start_time
