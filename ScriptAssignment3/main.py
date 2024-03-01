@@ -14,28 +14,32 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from torchtext.data.functional import to_map_style_dataset
 import math
+from torchtext.datasets import IMDB
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 current_dir = os.getcwd()
 relative_path = os.path.join(current_dir, r'Group4\ScriptAssignment3', 'IMDBDataset_short.csv')
-df = pd.read_csv(relative_path, encoding='utf-8')
+# df = pd.read_csv(relative_path, encoding='utf-8')
+
+imdbdata = IMDB(root=os.path.join(current_dir, r'Group4\ScriptAssignment3'), split=("train"))
 
 '''The embedding layer takes a long time!!!!'''
 # input embedding has 2 classes, one to preprocess the data and to convert the text to a tensor
 # the other is the nn.Embeddings class which is the layer in the nn
 
-preprocess = InputEmbedding(df)
+preprocess = InputEmbedding()
 
 
-# This preprocesses the text in the review column of the data frame
-df['review'] = df['review'].apply(InputEmbedding.preprocess_text)
-# This creates a string to integer dictionary that we use as our vocob for the model
-input_vocab_stoi, output_vocab_stoi = preprocess.build_vocab(df)
-print(input_vocab_stoi)
-# Grabs our vocab size and the model dimensions, we can adjust the model dimensions as needed
-vocab_size = len(input_vocab_stoi)
-# d_model = 50
+# # This preprocesses the text in the review column of the data frame
+# df['review'] = df['review'].apply(InputEmbedding.preprocess_text)
+# # This creates a string to integer dictionary that we use as our vocob for the model
+# input_vocab_stoi, output_vocab_stoi = preprocess.build_vocab(df)
+# preprocess.set_input_vocab(input_vocab_stoi)
+# print(input_vocab_stoi)
+# # Grabs our vocab size and the model dimensions, we can adjust the model dimensions as needed
+# vocab_size = len(input_vocab_stoi)
+# # d_model = 50
 
 # # Example using the first review in the data frame
 # first_review = df['review'][0]
@@ -46,46 +50,53 @@ vocab_size = len(input_vocab_stoi)
 # embedding = Embeddings(d_model, vocab_size)
 # embedded_review = embedding(first_review_tensor)
 
-# print(embedded_review)
+# Create input vocab and tokenize/lemmatize data
+input_vocab = []
+data_cleaned = []
+cntr = 0
+for (sentiment, text) in imdbdata:
+    sentiment, text, input_vocab = InputEmbedding.preprocess_text(sentiment, text, input_vocab)
+    data_cleaned.append((sentiment, text))
+    cntr += 1
+    if cntr > 50:
+        break
+# print()
+# print("input_vocab is: ", input_vocab)
+# print()
 
+# Create vocab string to integer lists
+input_vocab_stoi, output_vocab_stoi = preprocess.build_vocab_stoi(input_vocab)
+# print()
+# print("input_vocab stoi is: ", input_vocab_stoi)
+# print()
 
-# input_tensors = []
-# for data in df['review']:
-#     input_tensors.append(preprocess.convert_to_tensor(data, input_vocab_stoi))
-df['review'] = df['review'].apply(lambda x: preprocess.convert_to_tensor(x, input_vocab_stoi))
-# print("df review: ", df['review'])
-df['sentiment'] = df['sentiment'].apply(lambda x: preprocess.convert_to_tensor(x, input_vocab_stoi))
-# print("df sentiment: ", df['sentiment'])
+# Build tensor list with tuples of (sentiment, data)
+tensor_data = []
+for (sentiment, text) in data_cleaned:
+    tensor_data.append(preprocess.convert_to_tensor(sentiment, text, input_vocab_stoi))
+# print()
+# print("tensor_data is: ", tensor_data)
+# print()
 
-train_data, test_data = train_test_split(df, test_size=0.2)
-
+train_data, test_data = train_test_split(tensor_data, test_size=0.2)
 train_data, val_data = train_test_split(train_data, test_size=0.25)
 
-print("train data: ", train_data, ", train data len: ", len(train_data))
-
-MAX_PADDING = 20
-BATCH_SIZE = 128
-
-test = to_map_style_dataset(train_data)
-print("test123 to map: ", test)
-for data in test:
-    print("test data is: ", data)
-    
-def testfunc(batch):
-    print("batch is: ", batch)
-    return batch
+MAX_PADDING = 40
+BATCH_SIZE = 4
+preprocess.set_max_length(MAX_PADDING)
+preprocess.set_pad_index(input_vocab_stoi['<pad>'])
 
 train_iter = DataLoader(to_map_style_dataset(train_data), batch_size=BATCH_SIZE,
-                        shuffle=True, drop_last=True, collate_fn=testfunc)
-print("trainiter type: ", type(train_iter), ", len: ", len(train_iter))
+                        shuffle=True, drop_last=True, collate_fn=preprocess.pad)
+# print("trainiter type: ", type(train_iter), ", len: ", train_iter.__len__())
 
 valid_iter = DataLoader(to_map_style_dataset(val_data), batch_size=BATCH_SIZE,
-                        shuffle=True, drop_last=True, collate_fn=testfunc)
-print("validiter type: ", type(valid_iter), ", len: ", len(valid_iter))
+                        shuffle=True, drop_last=True, collate_fn=preprocess.pad)
+# print("validiter type: ", type(valid_iter), ", len: ", valid_iter.__len__())
 
 test_iter = DataLoader(to_map_style_dataset(test_data), batch_size=BATCH_SIZE,
-                       shuffle=True, drop_last=True, collate_fn=testfunc)
-print("testiter type: ", type(test_iter), ", len: ", len(test_iter))
+                       shuffle=True, drop_last=True, collate_fn=preprocess.pad)
+# print("testiter type: ", type(test_iter), ", len: ", test_iter.__len__())
 
 model = Model.create_transfomer_model(
     input_vocab_stoi,
@@ -94,14 +105,14 @@ model = Model.create_transfomer_model(
     num_heads=8, 
     embed_dim=256,
     feedforward_dim=512, 
-    max_sequence_length=50)
-model.cuda()
+    max_sequence_length=20)
+# model.cuda()
 
 print(f'The model has {Model.count_parameters(model):,} trainable parameters')
 
 # Train
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.0005)
-criterion = nn.CrossEntropyLoss(ignore_index=input_vocab_stoi['<padding>'])
+criterion = nn.CrossEntropyLoss(ignore_index=input_vocab_stoi['<pad>'])
 
 N_EPOCHS = 10
 CLIP = 1

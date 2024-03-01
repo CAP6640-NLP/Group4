@@ -14,7 +14,7 @@ class Model():
         input_vocab,
         output_vocab,
         layers: int = 3,
-        embed_dim: int = 512,
+        embed_dim: int = 256,
         feedforward_dim: int = 2048,
         num_heads: int = 8,
         dropout: float = 0.1,
@@ -37,16 +37,20 @@ class Model():
             dropout=dropout
         )
 
+        print("debug123: input size: ", len(input_vocab), ", output size: ", len(output_vocab))
         input_embed = Embeddings(embed_dim=embed_dim, vocab_size=len(input_vocab))
 
+        print("debug123: output embed")
         output_embed = Embeddings(embed_dim=embed_dim, vocab_size=len(output_vocab))
 
+        print("debug123: positional encode")
         positional_enc = PositionalEncoding(embed_dim=embed_dim, max_len=max_sequence_length)
 
         model = Transformer(encoder,
                             decoder,
                             nn.Sequential(input_embed, positional_enc),
-                            nn.Sequential(output_embed, positional_enc)
+                            nn.Sequential(output_embed, positional_enc),
+                            pad_index=input_vocab['<pad>']
                             )
         for p in model.parameters():
             if p.dim() > 1:
@@ -58,7 +62,7 @@ class Model():
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
     
     def train(model, iterator, optimizer, criterion, clip):
-        model.train()            
+        # model.train()            
         epoch_loss = 0
             
         for i, batch in enumerate(iterator):
@@ -76,8 +80,8 @@ class Model():
             epoch_loss += loss.item()
 
         # average loss for the epoch
-        # return epoch_loss / len(iterator)
-        return epoch_loss
+        return epoch_loss / len(iterator)
+        # return epoch_loss
     
     def evaluate(model, iterator, criterion):
         model.eval()
@@ -95,8 +99,8 @@ class Model():
                 epoch_loss += loss.item()
                 
         # average loss for the epoch
-        # return epoch_loss / len(iterator)
-        return epoch_loss
+        return epoch_loss / len(iterator)
+        # return epoch_loss
     
     def epoch_time(start_time, end_time):
         elapsed_time = end_time - start_time

@@ -5,3 +5,4 @@ venv
 *.csv
 *.pkl
 archive*
+datasets*

@@ -12,24 +12,27 @@ class Transformer(nn.Module):
         encoder: Encoder, 
         decoder: Decoder, 
         input_embed: Embeddings, 
-        output_embed: Embeddings
+        output_embed: Embeddings,
+        pad_index: int
     ):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.input_embed = input_embed
         self.output_embed = output_embed
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.pad_index = pad_index
+        # self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
         print("Using device: ", self.device)
 
     def create_input_mask(self, input: Tensor):
-        input_mask = (input).unsqueeze(1).unsqueeze(2)
+        input_mask = (input != self.pad_index).unsqueeze(1).unsqueeze(2)
         
         return input_mask
         
     def create_output_mask(self, output: Tensor):
         length = output.shape[1]
-        output_mask = (output).unsqueeze(1).unsqueeze(2)
+        output_mask = (output != self.pad_index).unsqueeze(1).unsqueeze(2)
         output_next_mask = torch.tril(torch.ones((length, length), device=self.device)).bool()
         output_mask = output_mask & output_next_mask
         
