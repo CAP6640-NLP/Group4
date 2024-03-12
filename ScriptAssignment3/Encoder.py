@@ -45,7 +45,7 @@ class EncoderLayer(nn.Module):
 
         return x, scores
     
-class Encoder(nn.module):
+class Encoder(nn.Module):
     def __init__(self, embed_dim=512, layers=32, num_heads=8, feedforward_dim=2048, dropout=0.1):
         '''
             embed_dim: embedding dimension of the input (a.k.a model dimensions)-> NOTE: From class notes = 512

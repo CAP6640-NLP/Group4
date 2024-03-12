@@ -1,6 +1,6 @@
 from torch import nn
 
-class FeedForward(nn.module):
+class FeedForward(nn.Module):
     def __init__(self, embed_dim=512, feedforward_dim=2048, dropout=0.1):
         '''
             embed_dim: embedding dimension of the input (a.k.a model dimensions)-> NOTE: From class notes = 512
@@ -21,7 +21,7 @@ class FeedForward(nn.module):
             nn.ReLU(),
             dropout,
             linear2,
-            dropout # @TODO this is an extra dropout, do we need this?
+            dropout
         )
 
     def forward(self, x):
