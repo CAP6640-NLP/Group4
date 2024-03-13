@@ -6,3 +6,4 @@ venv
 *.pkl
 archive*
 datasets*
+*OpenAI_API_KEY.txt
