@@ -2,6 +2,8 @@
 
 # Import necessary libraries
 from openai import OpenAI
+from gtts import gTTS
+import os
 
 super_secret_api_file = "OpenAI_API_KEY.txt"
 
@@ -23,4 +25,8 @@ response = client.completions.create(
   max_tokens=100
 )
 
-print(response.choices[0].text.strip())
+resp_test = response.choices[0].text.strip()
+print(resp_test, "\n Generating mp3 ...")
+myobj = gTTS(text=resp_test, lang='en', slow=False)
+myobj.save("response.mp3")
+os.system("response.mp3")
