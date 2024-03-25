@@ -4,6 +4,7 @@ venv
 *.npy
 *.csv
 *.pkl
+*.zip
 archive*
 datasets*
 *OpenAI_API_KEY.txt
