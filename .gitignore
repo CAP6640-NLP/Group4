@@ -8,3 +8,4 @@ venv
 archive*
 datasets*
 *OpenAI_API_KEY.txt
+*.keras
